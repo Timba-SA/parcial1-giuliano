@@ -5,6 +5,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 
+// Imports de Productos (Track 3)
+import { ProductosPage } from './pages/productos/ProductosPage'
+import { ProductoDetallePage } from './pages/productos/ProductoDetallePage'
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -21,7 +25,13 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<App />}>
-            <Route index element={<Navigate to="/usuarios" replace />} />
+            <Route index element={<Navigate to="/productos" replace />} />
+            
+            {/* Rutas Track 3: Productos */}
+            <Route path="productos" element={<ProductosPage />} />
+            <Route path="productos/:id" element={<ProductoDetallePage />} />
+
+            {/* Rutas Track 1: Identidad (Pendientes) */}
             <Route path="login" element={<div>Login (Todo)</div>} />
             <Route path="perfil" element={<div>Perfil (Todo)</div>} />
             <Route path="usuarios" element={<div>Usuarios (Todo)</div>} />

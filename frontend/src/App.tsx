@@ -5,11 +5,12 @@ function App() {
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
       <header className="bg-white shadow p-4">
         <nav className="flex justify-between items-center max-w-7xl mx-auto">
-          <div className="text-xl font-bold text-blue-600">Track 1 Identidad</div>
+          <div className="text-xl font-bold text-blue-600">Track 1 & 3 - Sistema</div>
           <div className="flex gap-4">
-            <Link to="/usuarios" className="hover:text-blue-500">Usuarios</Link>
-            <Link to="/perfil" className="hover:text-blue-500">Perfil</Link>
-            <Link to="/login" className="hover:text-blue-500">Login</Link>
+            <Link to="/usuarios" className="hover:text-blue-500 font-medium">Usuarios</Link>
+            <Link to="/productos" className="hover:text-blue-500 font-medium border-l pl-4 border-gray-300">Catálogo Productos</Link>
+            <Link to="/perfil" className="hover:text-blue-500 font-medium">Perfil</Link>
+            <Link to="/login" className="hover:text-blue-500 font-medium">Login</Link>
           </div>
         </nav>
       </header>
