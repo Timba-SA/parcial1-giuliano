@@ -1,0 +1,12 @@
+- [x] Dockerizar el proyecto (PostgreSQL, FastAPI y Frontend en contenedores)
+- [x] Configurar requirements.txt e instalar dependencias (FastAPI, SQLModel, Uvicorn, etc.)
+- [x] Configurar la Base de Datos PostgreSQL (conexion y configuraciones)
+- [x] Configurar el proyecto Vite + TS + Tailwind CSS para el Frontend
+- [x] Configurar react-router-dom para la navegación inicial
+- [x] Configurar TanStack Query en el frontend
+- [x] Implementar Modelos de Base de Datos (Rol, Usuario, Direccion)
+- [x] Implementar Schemas de Validación (Pydantic)
+- [x] Implementar Servicios (Lógica de Negocio, Hashing, Auth)
+- [x] Implementar Routers de la API y registrarlos en main.py
+- [x] Implementar Frontend Hooks (TanStack Query)
+- [x] Implementar Frontend Components y Pages (React)

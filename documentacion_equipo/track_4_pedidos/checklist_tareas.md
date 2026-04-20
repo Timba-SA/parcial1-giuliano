@@ -1,0 +1,8 @@
+- [ ] Integrar validaciones robustas y filtros por Query Params (Annotated y Query)
+- [ ] Implementar manejo centralizado de Excepciones y Estados HTTP (HTTPException)
+- [ ] Ocultar datos sensibles en las respuestas utilizando ResponseModels adecuados
+- [ ] Desarrollar Flujo de la demo: Verificar CRUD Completo desde la consola o terminal
+- [ ] Demostrar Validación Frontend: Mostrar cómo los mensajes de error de Pydantic y Form validan correctamente
+- [ ] Refinar estilos UI con Tailwind CSS 4 para que sea limpia y responsive
+- [ ] Demostrar la actualización reactiva en pantalla (invalidateQueries en TanStack)
+- [ ] Preparar guion y realizar grabación del video final del sistema

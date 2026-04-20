@@ -1,0 +1,7 @@
+- [ ] Crear Modelo de Datos (SQLModel) para Categorías
+- [ ] Configurar Relaciones 1:N y N:N con Producto
+- [ ] Crear Schemas de Entrada y Salida (Validaciones con Pydantic/Annotated) para Categorías
+- [ ] Desarrollar CRUD Persistente de Categorías en el Router / Service
+- [ ] Crear Componente Frontend para Listado de Categorías (useQuery, Tabla)
+- [ ] Implementar Formulario Modal para Alta/Edición de Categorías (useMutation, invalidateQueries)
+- [ ] Manejo visual de estados de "Cargando..." y "Error" en peticiones

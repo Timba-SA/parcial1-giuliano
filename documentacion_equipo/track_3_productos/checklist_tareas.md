@@ -1,0 +1,10 @@
+- [ ] Crear Modelo de Datos (SQLModel) para Productos e Ingredientes (y ProductoCategoria, ProductoIngrediente)
+- [ ] Configurar Relaciones y backpopulates entre entidades de Productos e Ingredientes
+- [ ] Crear Schemas de Entrada y Salida para Productos e Ingredientes
+- [ ] Desarrollar Endpoints CRUD para Productos (incluyendo relaciones con Categoría e Ingredientes)
+- [ ] Desarrollar Endpoints CRUD para Ingredientes
+- [ ] Crear Componentes Frontend para Listados de Productos e Ingredientes
+- [ ] Implementar Formulario Modal para Alta/Edición de Productos (seleccionando Categorías e Ingredientes)
+- [ ] Implementar Formulario Modal para Ingredientes
+- [ ] Mostrar información de las relaciones de cada producto en la tabla UI
+- [ ] Implementar ruta dinámica para Detalle de Producto (/detalle/:id)

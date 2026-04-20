@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: parcial1_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: parcial1_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: parcial1_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # OJO ACA: En vez de localhost, apunta al nombre del servicio "db"
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/parcial1_db
+    depends_on:
+      - db
+    volumes:
+      # Mapeamos el código local para no tener que recompilar al desarrollar
+      - ./app:/code/app
+
+  frontend:
+    build: ./frontend
+    container_name: parcial1_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - api
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      # Evita que node_modules local pise el del contenedor
+      - /app/node_modules
+
+volumes:
+  postgres_data:
