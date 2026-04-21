@@ -6,3 +6,5 @@
 - [ ] Refinar estilos UI con Tailwind CSS 4 para que sea limpia y responsive
 - [ ] Demostrar la actualización reactiva en pantalla (invalidateQueries en TanStack)
 - [ ] Preparar guion y realizar grabación del video final del sistema
+
+- [ ] Progreso: se implementaron modelos, routers y hooks iniciales - 2026-04-21 - autor: AI-Implementer

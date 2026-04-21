@@ -32,6 +32,26 @@ docker compose up --build -d
 - **Frontend (Web App):** [http://localhost:5173](http://localhost:5173)
 - **Backend (Documentación Swagger API):** [http://localhost:8000/docs](http://localhost:8000/docs)
 
+### Ejecutar tests que requieren Postgres
+
+Algunos tests avanzados del Track 4 requieren una instancia de Postgres en Docker. Para correrlos:
+
+1. Levantá la DB y el backend (en otra terminal podés dejar corriendo solo la DB si preferís):
+
+```bash
+docker compose up -d db
+```
+
+2. Asegurate que la variable de entorno DATABASE_URL apunte a la instancia del contenedor (docker-compose.yml ya configura la API para usar `postgresql://postgres:postgres@db:5432/parcial1_db`).
+
+3. Luego ejecutá los tests marcados para Postgres en tu entorno local:
+
+```bash
+pytest -q tests/test_pedidos_postgres.py
+```
+
+Si preferís no usar Docker, podés ajustar DATABASE_URL para apuntar a tu Postgres local.
+
 ---
 
 ## 💾 ¿Cómo conectarme a la Base de Datos para el video?
