@@ -31,9 +31,19 @@ class Ingrediente(SQLModel, table=True):
 # Modelo Categoria
 class Categoria(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    nombre: str = Field(max_length=100, unique=True)
+    nombre: str = Field(max_length=100, unique=True, index=True)
     descripcion: Optional[str] = None
+    orden_display: int = Field(default=0)
+    parent_id: Optional[int] = Field(default=None, foreign_key="categoria.id")
     activo: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    # Relación recursiva para árbol de categorías
+    subcategorias: List["Categoria"] = Relationship(back_populates="parent")
+    parent: Optional["Categoria"] = Relationship(
+        back_populates="subcategorias",
+        sa_relationship_kwargs={"remote_side": "Categoria.id"}
+    )
 
     productos: List["Producto"] = Relationship(
         back_populates="categorias",

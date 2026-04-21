@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useIngredientes, useCreateIngrediente } from '../../hooks/useIngredientes';
+import { Link } from 'react-router-dom';
 
 export const IngredientesModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const { data: ingredientes, isLoading } = useIngredientes();
@@ -50,9 +51,14 @@ export const IngredientesModal: React.FC<{ isOpen: boolean; onClose: () => void 
         <div className="w-full md:w-1/2 p-6 overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold">Nuevo Ingrediente</h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-800">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
+            <div className="flex items-center gap-3">
+              <Link to="/ingredientes" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                Ver gestión completa
+              </Link>
+              <button onClick={onClose} className="text-gray-500 hover:text-gray-800">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-4">

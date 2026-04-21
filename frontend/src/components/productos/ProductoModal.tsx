@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCreateProducto, useUpdateProducto, ProductoCreate, Producto } from '../../hooks/useProductos';
 import { useIngredientes } from '../../hooks/useIngredientes';
+import { useCategorias } from '../../hooks/useCategorias';
 
 interface ProductoModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface ProductoModalProps {
 
 export const ProductoModal: React.FC<ProductoModalProps> = ({ isOpen, onClose, productoAEditar }) => {
   const { data: ingredientesList } = useIngredientes();
+  const { data: categoriasList } = useCategorias();
   const createMutation = useCreateProducto();
   const updateMutation = useUpdateProducto();
 
@@ -19,6 +21,7 @@ export const ProductoModal: React.FC<ProductoModalProps> = ({ isOpen, onClose, p
   const [tiempoPrepMin, setTiempoPrepMin] = useState<number | ''>('');
   const [disponible, setDisponible] = useState(true);
   const [ingredientesSeleccionados, setIngredientesSeleccionados] = useState<number[]>([]);
+  const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<number[]>([]);
 
   useEffect(() => {
     if (productoAEditar) {
@@ -28,6 +31,7 @@ export const ProductoModal: React.FC<ProductoModalProps> = ({ isOpen, onClose, p
       setTiempoPrepMin(productoAEditar.tiempo_prep_min ?? '');
       setDisponible(productoAEditar.disponible);
       setIngredientesSeleccionados(productoAEditar.ingredientes.map(ing => ing.id));
+      setCategoriasSeleccionadas(productoAEditar.categorias.map(cat => cat.id));
     } else {
       setNombre('');
       setDescripcion('');
@@ -35,6 +39,7 @@ export const ProductoModal: React.FC<ProductoModalProps> = ({ isOpen, onClose, p
       setTiempoPrepMin('');
       setDisponible(true);
       setIngredientesSeleccionados([]);
+      setCategoriasSeleccionadas([]);
     }
   }, [productoAEditar, isOpen]);
 
@@ -48,6 +53,7 @@ export const ProductoModal: React.FC<ProductoModalProps> = ({ isOpen, onClose, p
       precio_base: precioBase,
       tiempo_prep_min: tiempoPrepMin === '' ? undefined : Number(tiempoPrepMin),
       disponible,
+      categoria_ids: categoriasSeleccionadas,
       ingrediente_ids: ingredientesSeleccionados
     };
 
@@ -65,6 +71,12 @@ export const ProductoModal: React.FC<ProductoModalProps> = ({ isOpen, onClose, p
   const handleIngredienteToggle = (id: number) => {
     setIngredientesSeleccionados(prev => 
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleCategoriaToggle = (id: number) => {
+    setCategoriasSeleccionadas(prev =>
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
     );
   };
 
@@ -130,6 +142,28 @@ export const ProductoModal: React.FC<ProductoModalProps> = ({ isOpen, onClose, p
               {(!ingredientesList || ingredientesList.length === 0) && (
                 <div className="col-span-full text-sm text-gray-500 italic p-2">
                   No hay ingredientes registrados en el sistema.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Categorías del Producto</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-48 overflow-y-auto p-2 border rounded-md bg-gray-50">
+              {categoriasList?.map(cat => (
+                <label key={cat.id} className="flex items-center p-2 border rounded bg-white hover:bg-gray-50 cursor-pointer shadow-sm">
+                  <input
+                    type="checkbox"
+                    checked={categoriasSeleccionadas.includes(cat.id)}
+                    onChange={() => handleCategoriaToggle(cat.id)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2"
+                  />
+                  <span className="text-sm text-gray-800">{cat.nombre}</span>
+                </label>
+              ))}
+              {(!categoriasList || categoriasList.length === 0) && (
+                <div className="col-span-full text-sm text-gray-500 italic p-2">
+                  No hay categorías registradas en el sistema.
                 </div>
               )}
             </div>

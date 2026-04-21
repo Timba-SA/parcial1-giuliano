@@ -75,6 +75,21 @@ export const ProductoDetallePage: React.FC = () => {
               )}
             </div>
 
+            <div className="mb-6 flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">Categorías</h3>
+              {producto.categorias && producto.categorias.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {producto.categorias.map((cat) => (
+                    <span key={cat.id} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
+                      {cat.nombre}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">No tiene categorías asignadas.</p>
+              )}
+            </div>
+
             <div className="mt-auto pt-6 border-t flex space-x-3">
               <button 
                 onClick={handleDelete}

@@ -8,6 +8,9 @@ import App from './App.tsx'
 // Imports de Productos (Track 3)
 import { ProductosPage } from './pages/productos/ProductosPage'
 import { ProductoDetallePage } from './pages/productos/ProductoDetallePage'
+import { CategoriasPage } from './pages/categorias/CategoriasPage'
+import { IngredientesPage } from './pages/ingredientes/IngredientesPage'
+import { CatalogoPage } from './pages/catalogo/CatalogoPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +28,12 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<App />}>
-            <Route index element={<Navigate to="/productos" replace />} />
+            <Route index element={<Navigate to="/catalogo" replace />} />
+
+            {/* Rutas Track 2: Catálogo */}
+            <Route path="catalogo" element={<CatalogoPage />} />
+            <Route path="categorias" element={<CategoriasPage />} />
+            <Route path="ingredientes" element={<IngredientesPage />} />
             
             {/* Rutas Track 3: Productos */}
             <Route path="productos" element={<ProductosPage />} />

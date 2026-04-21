@@ -11,6 +11,14 @@ export interface Ingrediente {
   unidad_medida: string;
 }
 
+export interface Categoria {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+  orden_display: number;
+  activo: boolean;
+}
+
 export interface Producto {
   id: number;
   nombre: string;
@@ -20,6 +28,7 @@ export interface Producto {
   disponible: boolean;
   created_at: string;
   ingredientes: Ingrediente[];
+  categorias: Categoria[];
 }
 
 export interface ProductoCreate {

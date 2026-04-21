@@ -11,6 +11,13 @@ export interface IngredienteCreate {
   unidad_medida?: string;
 }
 
+export interface IngredienteUpdate {
+  nombre?: string;
+  descripcion?: string;
+  stock?: number;
+  unidad_medida?: string;
+}
+
 export const useIngredientes = () => {
   return useQuery({
     queryKey: ['ingredientes'],
@@ -39,6 +46,19 @@ export const useDeleteIngrediente = () => {
   return useMutation({
     mutationFn: async (id: number) => {
       await axios.delete(`${API_URL}/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ingredientes'] });
+    },
+  });
+};
+
+export const useUpdateIngrediente = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ingrediente }: { id: number; ingrediente: IngredienteUpdate }) => {
+      const { data } = await axios.put<Ingrediente>(`${API_URL}/${id}`, ingrediente);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredientes'] });

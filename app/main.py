@@ -6,7 +6,11 @@ from app.core.database import init_db
 # Import routers
 from app.usuario.router import router as usuario_router
 from app.api.routes.auth import router as auth_router
-from app.producto.router import router as producto_router, router_ingredientes as ingrediente_router
+from app.producto.router import (
+    router as producto_router,
+    router_ingredientes as ingrediente_router,
+    router_categorias as categoria_router,
+)
 
 # Import models to ensure they are registered with SQLModel metadata
 from app.usuario.model import Usuario, UsuarioRol
@@ -39,6 +43,7 @@ app.include_router(usuario_router)
 app.include_router(auth_router)
 app.include_router(producto_router)
 app.include_router(ingrediente_router)
+app.include_router(categoria_router)
 
 @app.get("/")
 def read_root():

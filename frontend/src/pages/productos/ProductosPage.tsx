@@ -103,6 +103,24 @@ export const ProductosPage: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                {producto.categorias && producto.categorias.length > 0 && (
+                  <div className="mb-3">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Categorías:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {producto.categorias.slice(0, 3).map(cat => (
+                        <span key={cat.id} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                          {cat.nombre}
+                        </span>
+                      ))}
+                      {producto.categorias.length > 3 && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                          +{producto.categorias.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex justify-between items-center mt-auto">
                   <span className="text-2xl font-black text-gray-900">${producto.precio_base.toFixed(2)}</span>
