@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { IngredienteModal } from '../../components/ingredientes/IngredienteModal';
 import { useIngredientes, useDeleteIngrediente } from '../../hooks/useIngredientes';
-import { Ingrediente } from '../../hooks/useProductos';
+import { type Ingrediente } from '../../hooks/useProductos';
 
 export const IngredientesPage: React.FC = () => {
   const { data: ingredientes, isLoading, error } = useIngredientes();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useCreateProducto, useUpdateProducto, ProductoCreate, Producto } from '../../hooks/useProductos';
+import { useCreateProducto, useUpdateProducto, type ProductoCreate, type Producto } from '../../hooks/useProductos';
 import { useIngredientes } from '../../hooks/useIngredientes';
 import { useCategorias } from '../../hooks/useCategorias';
 
@@ -51,10 +51,10 @@ export const ProductoModal: React.FC<ProductoModalProps> = ({ isOpen, onClose, p
       nombre,
       descripcion,
       precio_base: precioBase,
-      tiempo_prep_min: tiempoPrepMin === '' ? undefined : Number(tiempoPrepMin),
+      tiempo_prep_min: tiempoPrepMin || undefined,
       disponible,
-      categoria_ids: categoriasSeleccionadas,
-      ingrediente_ids: ingredientesSeleccionados
+      categorias: categoriasSeleccionadas.map(id => ({ categoria_id: id, es_principal: false })),
+      ingredientes: ingredientesSeleccionados.map(id => ({ ingrediente_id: id, es_removible: true, es_opcional: false }))
     };
 
     if (productoAEditar) {

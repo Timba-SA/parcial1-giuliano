@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Usuario } from '../../hooks/useUsuarios';
+import { type Usuario } from '../../hooks/useUsuarios';
 
 interface UserFormProps {
   user?: Usuario;

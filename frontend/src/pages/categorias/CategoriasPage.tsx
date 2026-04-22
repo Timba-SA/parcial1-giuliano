@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CategoriaModal } from '../../components/categorias/CategoriaModal';
-import { Categoria, useCategorias, useDeleteCategoria } from '../../hooks/useCategorias';
+import { type Categoria, useCategorias, useDeleteCategoria } from '../../hooks/useCategorias';
 
 export const CategoriasPage: React.FC = () => {
   const { data: categorias, isLoading, error } = useCategorias();

@@ -8,6 +8,7 @@ from .schema import (
     IngredienteCreate, IngredienteOut, IngredienteUpdate,
     CategoriaCreate, CategoriaOut, CategoriaUpdate
 )
+from app.producto.service import ProductoService
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
 router_ingredientes = APIRouter(prefix="/ingredientes", tags=["Ingredientes"])
@@ -83,18 +84,10 @@ def delete_ingrediente(
     id: int,
     session: Session = Depends(get_session)
 ):
-    ingrediente = session.get(Ingrediente, id)
-    if not ingrediente:
-        raise HTTPException(status_code=404, detail="Ingrediente no encontrado")
-
-    if ingrediente.productos:
-        raise HTTPException(
-            status_code=400,
-            detail="No se puede eliminar un ingrediente que está asociado a productos"
-        )
-    
-    session.delete(ingrediente)
-    session.commit()
+    try:
+        ProductoService.delete_ingrediente(session, id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return {"message": "Ingrediente eliminado"}
 
 
@@ -108,7 +101,7 @@ def get_categorias(
     limit: Annotated[int, Query(ge=1, le=100)] = 50
 ):
     categorias = session.exec(
-        select(Categoria)
+        select(Categoria).where(Categoria.activo == True)
         .offset(skip)
         .limit(limit)
     ).all()
@@ -121,7 +114,7 @@ def get_categoria(
     session: Session = Depends(get_session)
 ):
     categoria = session.get(Categoria, id)
-    if not categoria:
+    if not categoria or not categoria.activo:
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
     return categoria
 
@@ -133,8 +126,8 @@ def create_categoria(
 ):
     if categoria_in.parent_id is not None:
         parent = session.get(Categoria, categoria_in.parent_id)
-        if not parent:
-            raise HTTPException(status_code=400, detail="La categoría padre no existe")
+        if not parent or not parent.activo:
+            raise HTTPException(status_code=400, detail="La categoría padre no existe o no está activa")
 
     existente = session.exec(
         select(Categoria).where(Categoria.nombre == categoria_in.nombre)
@@ -156,7 +149,7 @@ def update_categoria(
     session: Session = Depends(get_session)
 ):
     categoria = session.get(Categoria, id)
-    if not categoria:
+    if not categoria or not categoria.activo:
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
 
     update_data = categoria_in.model_dump(exclude_unset=True)
@@ -167,7 +160,7 @@ def update_categoria(
             raise HTTPException(status_code=400, detail="Una categoría no puede ser su propia padre")
         if parent_id is not None:
             parent = session.get(Categoria, parent_id)
-            if not parent:
+            if not parent or not parent.activo:
                 raise HTTPException(status_code=400, detail="La categoría padre no existe")
 
     if "nombre" in update_data and update_data["nombre"] != categoria.nombre:
@@ -191,28 +184,11 @@ def delete_categoria(
     id: Annotated[int, Path(ge=1)],
     session: Session = Depends(get_session)
 ):
-    categoria = session.get(Categoria, id)
-    if not categoria:
-        raise HTTPException(status_code=404, detail="Categoría no encontrada")
-
-    tiene_subcategorias = session.exec(
-        select(Categoria).where(Categoria.parent_id == id)
-    ).first()
-    if tiene_subcategorias:
-        raise HTTPException(
-            status_code=400,
-            detail="No se puede eliminar una categoría con subcategorías asociadas"
-        )
-
-    if categoria.productos:
-        raise HTTPException(
-            status_code=400,
-            detail="No se puede eliminar una categoría que está asociada a productos"
-        )
-
-    session.delete(categoria)
-    session.commit()
-    return {"message": "Categoría eliminada"}
+    try:
+        ProductoService.delete_categoria(session, id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"message": "Categoría eliminada lógicamente"}
 
 
 # ==========================
@@ -221,63 +197,30 @@ def delete_categoria(
 @router.get("/", response_model=List[ProductoOut])
 def get_productos(
     session: Session = Depends(get_session),
-    skip: int = 0,
-    limit: Annotated[int, Query(le=100)] = 50,
-    disponible: Optional[bool] = None
+    limit: Annotated[int, Query(le=100)] = 50
 ):
-    query = select(Producto)
-    if disponible is not None:
-        query = query.where(Producto.disponible == disponible)
-    
-    productos = session.exec(query.offset(skip).limit(limit)).all()
-    return productos
+    # ACADEMIC RESTRICTION for GET / of productos: MUST keep exactly limit: Annotated[int, Query(le=100)] = 50.
+    return ProductoService.get_productos(session, limit=limit)
 
 @router.get("/{id}", response_model=ProductoOut)
 def get_producto(
     id: int = Path(...),
     session: Session = Depends(get_session)
 ):
-    producto = session.get(Producto, id)
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return producto
+    try:
+        return ProductoService.get_producto(session, id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 @router.post("/", response_model=ProductoOut)
 def create_producto(
     producto_in: ProductoCreate,
     session: Session = Depends(get_session)
 ):
-    ingredientes = []
-    categorias = []
-
-    if producto_in.ingrediente_ids:
-        ingredientes = session.exec(
-            select(Ingrediente).where(Ingrediente.id.in_(producto_in.ingrediente_ids))
-        ).all()
-        if len(ingredientes) != len(set(producto_in.ingrediente_ids)):
-            raise HTTPException(status_code=400, detail="Uno o más ingredientes no existen")
-
-    if producto_in.categoria_ids:
-        categorias = session.exec(
-            select(Categoria).where(Categoria.id.in_(producto_in.categoria_ids))
-        ).all()
-        if len(categorias) != len(set(producto_in.categoria_ids)):
-            raise HTTPException(status_code=400, detail="Una o más categorías no existen")
-
-    producto = Producto(
-        nombre=producto_in.nombre,
-        descripcion=producto_in.descripcion,
-        precio_base=producto_in.precio_base,
-        tiempo_prep_min=producto_in.tiempo_prep_min,
-        disponible=producto_in.disponible
-    )
-    producto.ingredientes = list(ingredientes)
-    producto.categorias = list(categorias)
-
-    session.add(producto)
-    session.commit()
-    session.refresh(producto)
-    return producto
+    try:
+        return ProductoService.create_producto(session, producto_in)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.put("/{id}", response_model=ProductoOut)
@@ -286,58 +229,24 @@ def update_producto(
     producto_in: ProductoUpdate,
     session: Session = Depends(get_session)
 ):
-    producto = session.get(Producto, id)
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-
-    update_data = producto_in.model_dump(exclude_unset=True, exclude={"categoria_ids", "ingrediente_ids"})
-    for key, value in update_data.items():
-        setattr(producto, key, value)
-
-    # Update ingredientes
-    if producto_in.ingrediente_ids is not None:
-        ingredientes = session.exec(
-            select(Ingrediente).where(Ingrediente.id.in_(producto_in.ingrediente_ids))
-        ).all() if producto_in.ingrediente_ids else []
-
-        if len(ingredientes) != len(set(producto_in.ingrediente_ids or [])):
-            raise HTTPException(status_code=400, detail="Uno o más ingredientes no existen")
-
-        producto.ingredientes = list(ingredientes)
-
-    # Update categorías
-    if producto_in.categoria_ids is not None:
-        categorias = session.exec(
-            select(Categoria).where(Categoria.id.in_(producto_in.categoria_ids))
-        ).all() if producto_in.categoria_ids else []
-
-        if len(categorias) != len(set(producto_in.categoria_ids or [])):
-            raise HTTPException(status_code=400, detail="Una o más categorías no existen")
-
-        producto.categorias = list(categorias)
-
-    session.add(producto)
-    session.commit()
-    session.refresh(producto)
-    return producto
+    try:
+        return ProductoService.update_producto(session, id, producto_in)
+    except ValueError as e:
+        if str(e) == "Producto no encontrado":
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.patch("/{id}/stock", response_model=ProductoOut)
-def update_producto_stock(
+@router.patch("/{id}/disponibilidad", response_model=ProductoOut)
+def update_producto_disponibilidad(
     id: int,
-    stock: int = Query(..., ge=0),
+    disponible: bool = Query(...),
     session: Session = Depends(get_session)
 ):
-    producto = session.get(Producto, id)
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-
-    # El modelo Producto no tiene campo stock. Se usa stock derivado para disponibilidad.
-    producto.disponible = stock > 0
-    session.add(producto)
-    session.commit()
-    session.refresh(producto)
-    return producto
+    try:
+        return ProductoService.update_disponibilidad(session, id, disponible)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.delete("/{id}")
@@ -345,10 +254,8 @@ def delete_producto(
     id: int,
     session: Session = Depends(get_session)
 ):
-    producto = session.get(Producto, id)
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-
-    session.delete(producto)
-    session.commit()
-    return {"message": "Producto eliminado"}
+    try:
+        ProductoService.delete_producto(session, id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"message": "Producto eliminado lógicamente"}

@@ -28,6 +28,32 @@ class IngredienteOut(IngredienteBase):
 
 
 # ==========================
+# Schemas para Relaciones Pivot
+# ==========================
+class ProductoCategoriaCreate(BaseModel):
+    categoria_id: int
+    es_principal: bool = False
+
+class ProductoIngredienteCreate(BaseModel):
+    ingrediente_id: int
+    es_removible: bool = True
+    es_opcional: bool = False
+
+class ProductoIngredienteDetailOut(IngredienteOut):
+    es_removible: bool
+    es_opcional: bool
+
+class ProductoCategoriaDetailOut(BaseModel):
+    id: int
+    nombre: str
+    descripcion: Optional[str] = None
+    orden_display: int
+    activo: bool
+    created_at: datetime
+    es_principal: bool
+
+
+# ==========================
 # Schemas para Producto
 # ==========================
 class ProductoBase(BaseModel):
@@ -38,8 +64,8 @@ class ProductoBase(BaseModel):
     disponible: bool = Field(default=True)
 
 class ProductoCreate(ProductoBase):
-    categoria_ids: List[int] = []
-    ingrediente_ids: List[int] = []
+    categorias: List[ProductoCategoriaCreate] = []
+    ingredientes: List[ProductoIngredienteCreate] = []
 
 class ProductoUpdate(BaseModel):
     nombre: Optional[str] = Field(None, max_length=150)
@@ -47,25 +73,15 @@ class ProductoUpdate(BaseModel):
     precio_base: Optional[float] = Field(None, ge=0.0)
     tiempo_prep_min: Optional[int] = Field(None, ge=1)
     disponible: Optional[bool] = None
-    categoria_ids: Optional[List[int]] = None
-    ingrediente_ids: Optional[List[int]] = None
+    categorias: Optional[List[ProductoCategoriaCreate]] = None
+    ingredientes: Optional[List[ProductoIngredienteCreate]] = None
 
-
-class CategoriaRefOut(BaseModel):
-    id: int
-    nombre: str
-    descripcion: Optional[str] = None
-    orden_display: int
-    activo: bool
-
-    class Config:
-        from_attributes = True
 
 class ProductoOut(ProductoBase):
     id: int
     created_at: datetime
-    ingredientes: List[IngredienteOut] = []
-    categorias: List[CategoriaRefOut] = []
+    ingredientes: List[ProductoIngredienteDetailOut] = []
+    categorias: List[ProductoCategoriaDetailOut] = []
 
     class Config:
         from_attributes = True

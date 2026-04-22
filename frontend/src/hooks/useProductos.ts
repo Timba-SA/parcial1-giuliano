@@ -31,14 +31,25 @@ export interface Producto {
   categorias: Categoria[];
 }
 
+export interface ProductoCategoriaCreate {
+  categoria_id: number;
+  es_principal?: boolean;
+}
+
+export interface ProductoIngredienteCreate {
+  ingrediente_id: number;
+  es_removible?: boolean;
+  es_opcional?: boolean;
+}
+
 export interface ProductoCreate {
   nombre: string;
   descripcion?: string;
   precio_base: number;
   tiempo_prep_min?: number;
   disponible?: boolean;
-  categoria_ids?: number[];
-  ingrediente_ids?: number[];
+  categorias?: ProductoCategoriaCreate[];
+  ingredientes?: ProductoIngredienteCreate[];
 }
 
 export const useProductos = (disponible?: boolean) => {
@@ -92,11 +103,11 @@ export const useUpdateProducto = () => {
   });
 };
 
-export const useUpdateStock = () => {
+export const useUpdateDisponibilidad = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, stock }: { id: number, stock: number }) => {
-      const { data } = await axios.patch<Producto>(`${API_URL}/${id}/stock?stock=${stock}`);
+    mutationFn: async ({ id, disponible }: { id: number, disponible: boolean }) => {
+      const { data } = await axios.patch<Producto>(`${API_URL}/${id}/disponibilidad?disponible=${disponible}`);
       return data;
     },
     onSuccess: (_, variables) => {

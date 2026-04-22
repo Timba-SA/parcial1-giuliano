@@ -1,5 +1,4 @@
 import React from 'react';
-import { PedidoOut } from '../../types';
 
 interface Props {
   pedidos: any[];

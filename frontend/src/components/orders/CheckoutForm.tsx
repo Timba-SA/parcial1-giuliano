@@ -22,9 +22,9 @@ const CheckoutForm: React.FC = () => {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
-    createOrder.mutate({ forma_pago_codigo: formaPago, detalles: items }, {
-      onSuccess: (data) => {
-        setMessage('Pedido creado correctamente');
+      createOrder.mutate({ forma_pago_codigo: formaPago, detalles: items }, {
+        onSuccess: () => {
+          setMessage('Pedido creado correctamente');
         setItems([{ producto_id: productos?.[0]?.id || 0, cantidad: 1 }]);
       },
       onError: (err: any) => {

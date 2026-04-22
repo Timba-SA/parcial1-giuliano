@@ -19,5 +19,5 @@ class Usuario(SQLModel, table=True):
     is_active: bool = Field(default=True)
     
     # Relaciones
-    roles: List["Rol"] = Relationship(link_model=UsuarioRol)
+    roles: List["Rol"] = Relationship(link_model=UsuarioRol, sa_relationship_kwargs={"primaryjoin": "Usuario.id==UsuarioRol.usuario_id"})
     direcciones: List["DireccionEntrega"] = Relationship(back_populates="usuario")

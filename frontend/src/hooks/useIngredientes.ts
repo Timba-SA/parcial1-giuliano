@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Ingrediente } from './useProductos';
+import { type Ingrediente } from './useProductos';
 
 const API_URL = 'http://localhost:8000/ingredientes';
 

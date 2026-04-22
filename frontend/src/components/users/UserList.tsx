@@ -1,5 +1,5 @@
 import { useUsuarios, useDeleteUsuario } from '../../hooks/useUsuarios';
-import { Usuario } from '../../hooks/useUsuarios';
+import { type Usuario } from '../../hooks/useUsuarios';
 
 export default function UserList() {
   const { data: usuarios, isLoading, isError } = useUsuarios();

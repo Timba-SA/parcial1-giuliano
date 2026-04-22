@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Categoria, CategoriaCreate, useCreateCategoria, useUpdateCategoria } from '../../hooks/useCategorias';
+import { type Categoria, type CategoriaCreate, useCreateCategoria, useUpdateCategoria } from '../../hooks/useCategorias';
 
 interface CategoriaModalProps {
   isOpen: boolean;

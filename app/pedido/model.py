@@ -19,9 +19,9 @@ class FormaPago(SQLModel, table=True):
 class Pedido(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     usuario_id: int = Field(foreign_key="usuario.id")
-    direccion_id: Optional[int] = Field(default=None, foreign_key="direccion_entrega.id")
-    estado_codigo: str = Field(foreign_key="estado_pedido.codigo")
-    forma_pago_codigo: str = Field(foreign_key="forma_pago.codigo")
+    direccion_id: Optional[int] = Field(default=None, foreign_key="direccionentrega.id")
+    estado_codigo: str = Field(foreign_key="estadopedido.codigo")
+    forma_pago_codigo: str = Field(foreign_key="formapago.codigo")
 
     subtotal: float = Field(default=0.0)
     descuento: float = Field(default=0.0)
@@ -44,13 +44,17 @@ class DetallePedido(SQLModel, table=True):
     precio_unitario_snap: float = Field(ge=0.0)
     subtotal_snap: float
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    pedido: "Pedido" = Relationship(back_populates="detalles")
 
 
 class HistorialEstadoPedido(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     pedido_id: int = Field(foreign_key="pedido.id")
-    estado_desde: Optional[str] = Field(default=None, foreign_key="estado_pedido.codigo")
-    estado_hacia: str = Field(foreign_key="estado_pedido.codigo")
+    estado_desde: Optional[str] = Field(default=None, foreign_key="estadopedido.codigo")
+    estado_hacia: str = Field(foreign_key="estadopedido.codigo")
     usuario_id: Optional[int] = Field(default=None, foreign_key="usuario.id")
     motivo: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    pedido: "Pedido" = Relationship(back_populates="historial")

@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  IngredienteCreate,
-  IngredienteUpdate,
-  useCreateIngrediente,
-  useUpdateIngrediente,
-} from '../../hooks/useIngredientes';
-import { Ingrediente } from '../../hooks/useProductos';
+import { type IngredienteCreate, type IngredienteUpdate, useCreateIngrediente, useUpdateIngrediente,  } from '../../hooks/useIngredientes';
+import { type Ingrediente } from '../../hooks/useProductos';
 
 interface IngredienteModalProps {
   isOpen: boolean;

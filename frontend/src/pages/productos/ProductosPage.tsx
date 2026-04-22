@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useProductos, Producto } from '../../hooks/useProductos';
+import { useProductos, type Producto } from '../../hooks/useProductos';
 import { ProductoModal } from '../../components/productos/ProductoModal';
 import { IngredientesModal } from '../../components/productos/IngredientesModal';
 import { Link } from 'react-router-dom';
