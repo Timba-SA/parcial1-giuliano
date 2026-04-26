@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useCreateOrder } from '../../hooks/usePedidos';
-import { useProductos } from '../../hooks/useProductos';
+import { useProductos, type Producto } from '../../hooks/useProductos';
 
 const CheckoutForm: React.FC = () => {
   const { data: productos = [] } = useProductos();
@@ -12,7 +12,7 @@ const CheckoutForm: React.FC = () => {
   const total = useMemo(() => {
     let s = 0;
     for (const it of items) {
-      const p = productos.find((x: any) => x.id === it.producto_id);
+      const p = productos.find((x: Producto) => x.id === it.producto_id);
       const price = p ? p.precio_base || 0 : 0;
       s += price * (it.cantidad || 0);
     }
@@ -59,7 +59,7 @@ const CheckoutForm: React.FC = () => {
           {items.map((it, idx) => (
             <div key={idx} className="flex gap-2 items-center">
               <select value={it.producto_id} onChange={(e) => updateItem(idx, 'producto_id', parseInt(e.target.value || '0'))} className="p-2 border rounded">
-                {productos.map((p: any) => (
+                {productos.map((p: Producto) => (
                   <option key={p.id} value={p.id}>{p.nombre} - ${p.precio_base}</option>
                 ))}
               </select>

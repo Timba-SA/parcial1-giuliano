@@ -22,8 +22,17 @@ export default function LoginPage() {
       );
       localStorage.setItem('token', data.access_token);
       navigate('/perfil');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Credenciales incorrectas. Intentá de nuevo.');
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const msg = err.response?.data?.detail;
+        if (msg && typeof msg === 'string' && msg.includes('already exists')) {
+          setError('El usuario ya existe.');
+        } else {
+          setError(msg || 'Credenciales incorrectas. Intentá de nuevo.');
+        }
+      } else {
+        setError('Ocurrió un error inesperado');
+      }
     } finally {
       setLoading(false);
     }

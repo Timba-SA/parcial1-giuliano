@@ -1,17 +1,15 @@
 import UserList from '../components/users/UserList';
 import UserForm from '../components/users/UserForm';
-import { useCrearUsuario } from '../hooks/useUsuarios';
+import { useCrearUsuario, type NuevoUsuario } from '../hooks/useUsuarios';
 import { useState } from 'react';
 
 export default function UsuariosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const createMutation = useCrearUsuario();
 
-  const handleCreateUser = (data: any) => {
+  const handleCreateUser = (data: NuevoUsuario) => {
     createMutation.mutate(data, {
-      onSuccess: () => {
-        setIsModalOpen(false);
-      }
+      onSuccess: () => setIsModalOpen(false),
     });
   };
 

@@ -30,6 +30,17 @@ export const useMyOrders = (userId?: number) => {
   });
 };
 
+export const usePedido = (pedidoId: number) => {
+  return useQuery({
+    queryKey: ['pedido', pedidoId],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API_URL}/pedidos/${pedidoId}`, { headers: getAuthHeaders() });
+      return data;
+    },
+    enabled: !!pedidoId,
+  });
+};
+
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({

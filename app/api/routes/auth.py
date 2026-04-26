@@ -6,8 +6,8 @@ from typing import Annotated
 
 from app.core.database import get_session
 from app.core.security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, verify_password
-from app.usuario.service import get_user_by_email
-from app.usuario.schema import Token, LoginRequest
+from app.usuario.service import get_user_by_email, crear_usuario
+from app.usuario.schema import Token, LoginRequest, UsuarioCreate, UsuarioOut
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -29,3 +29,20 @@ def login_for_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/signup", response_model=UsuarioOut, status_code=201)
+def signup(
+    user_in: UsuarioCreate,
+    session: Session = Depends(get_session)
+):
+    # Check if user already exists
+    existing_user = get_user_by_email(session, user_in.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El email ya está registrado"
+        )
+    
+    # Create the user
+    new_user = crear_usuario(session=session, user_in=user_in)
+    return new_user

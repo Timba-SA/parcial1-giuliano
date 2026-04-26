@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { type Usuario } from '../../hooks/useUsuarios';
+import { type Usuario, type NuevoUsuario } from '../../hooks/useUsuarios';
 
 interface UserFormProps {
   user?: Usuario;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: NuevoUsuario) => void;
   onCancel: () => void;
   isLoading: boolean;
 }

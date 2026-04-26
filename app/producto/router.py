@@ -249,13 +249,13 @@ def update_producto_disponibilidad(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.delete("/{id}")
+@router.delete("/{id}", status_code=204)
 def delete_producto(
     id: int,
     session: Session = Depends(get_session)
 ):
     try:
         ProductoService.delete_producto(session, id)
+        return None
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    return {"message": "Producto eliminado lógicamente"}

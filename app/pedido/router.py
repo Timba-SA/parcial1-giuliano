@@ -137,20 +137,10 @@ def cambiar_estado(id: int = Path(...), nuevo_estado: str = Query(..., max_lengt
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/{id}")
+@router.delete("/{id}", status_code=204)
 def cancelar_pedido(id: int = Path(...), session: Session = Depends(get_session)):
     try:
-        pedido = move_state(id, "cancelled", session)
-        return PedidoOut(
-            id=pedido.id,
-            subtotal=pedido.subtotal,
-            descuento=pedido.descuento,
-            costo_envio=pedido.costo_envio,
-            total=pedido.total,
-            estado_codigo=pedido.estado_codigo,
-            detalles=[],
-            created_at=pedido.created_at,
-            updated_at=pedido.updated_at,
-        )
+        move_state(id, "cancelled", session)
+        return None
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

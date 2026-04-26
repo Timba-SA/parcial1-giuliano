@@ -12,9 +12,12 @@ import { CategoriasPage } from './pages/categorias/CategoriasPage'
 import { IngredientesPage } from './pages/ingredientes/IngredientesPage'
 import { CatalogoPage } from './pages/catalogo/CatalogoPage'
 import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 import UserProfilePage from './pages/UserProfilePage'
 import OrdersPage from './pages/OrdersPage'
+import OrderDetallePage from './pages/OrderDetallePage'
 import CarritoPage from './pages/CarritoPage'
+import UsuariosPage from './pages/UsuariosPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,12 +49,13 @@ createRoot(document.getElementById('root')!).render(
             {/* Rutas Track 4: Pedidos */}
             <Route path="carrito" element={<CarritoPage />} />
             <Route path="mis-pedidos" element={<OrdersPage />} />
-            <Route path="mis-pedidos/:id" element={<div>Detalle pedido (todo)</div>} />
+            <Route path="mis-pedidos/:id" element={<OrderDetallePage />} />
 
             {/* Rutas Track 1: Identidad (Pendientes) */}
             <Route path="login" element={<LoginPage />} />
+            <Route path="registro" element={<RegisterPage />} />
             <Route path="perfil" element={<UserProfilePage />} />
-            <Route path="usuarios" element={<div>Usuarios (Todo)</div>} />
+            <Route path="usuarios" element={<UsuariosPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

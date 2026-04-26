@@ -17,6 +17,7 @@ def crear_usuario(session: Session, user_in: UsuarioCreate) -> Usuario:
             detail="The user with this email already exists in the system."
         )
     
+    # Password is already truncated by validator in schema
     hashed_password = get_password_hash(user_in.password)
     
     db_user = Usuario(

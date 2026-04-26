@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List
 
 class UsuarioCreate(BaseModel):
@@ -7,6 +7,16 @@ class UsuarioCreate(BaseModel):
     email: EmailStr
     celular: Optional[str] = None
     password: str
+    
+    @field_validator('password', mode='before')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        # Truncar a 72 bytes (límite de bcrypt) - convierte a bytes primero para contar bytes reales, no caracteres
+        password_bytes = v.encode('utf-8')
+        if len(password_bytes) > 72:
+            # Truncar y convertir de vuelta a string
+            return password_bytes[:72].decode('utf-8', errors='ignore')
+        return v
 
 class UsuarioUpdate(BaseModel):
     nombre: Optional[str] = None

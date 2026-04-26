@@ -42,9 +42,10 @@ def update_user_route(
 ):
     return update_usuario(session=session, user_id=id, user_in=user_in)
 
-@router.delete("/{id}", response_model=UsuarioOut)
+@router.delete("/{id}", status_code=204)
 def delete_user_route(
     id: int,
     session: Session = Depends(get_session)
 ):
-    return delete_usuario(session=session, user_id=id)
+    delete_usuario(session=session, user_id=id)
+    return None
