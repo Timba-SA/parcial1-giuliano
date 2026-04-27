@@ -1,8 +1,9 @@
 from sqlmodel import create_engine, SQLModel, Session
 import os
 
-# You would normally use pydantic_settings here to load from .env
-# We'll use a local pg database URL as an example
+# Normalmente usamos pydantic_settings cargandolo en .env
+# Pero acá lo dejamos hardcodeado para simplificar el ejemplo. 
+# En producción, usar variables de entorno o un sistema de configuración más robusto.
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/parcial1_db")
 
 engine = create_engine(DATABASE_URL, echo=True)
