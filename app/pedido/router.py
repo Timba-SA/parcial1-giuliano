@@ -59,10 +59,18 @@ def list_pedidos(
     session: Session = Depends(get_session),
     current_user=Depends(get_current_user_optional),
 ):
-    q = select(Pedido)
-    # Si no se pasa user_id y hay un usuario autenticado, filtrar por su id
-    if user_id is None and current_user is not None:
-        user_id = getattr(current_user, 'id', None)
+    q = select(Pedido).order_by(Pedido.id.desc())
+    
+    # Si hay un usuario autenticado
+    if current_user is not None:
+        # Verificar roles
+        roles_codigos = [r.codigo for r in current_user.roles] if hasattr(current_user, 'roles') else []
+        es_staff = "admin" in roles_codigos or "empleado" in roles_codigos
+        
+        if not es_staff and user_id is None:
+            # Cliente normal viendo sus propios pedidos
+            user_id = current_user.id
+            
     if user_id is not None:
         q = q.where(Pedido.usuario_id == user_id)
     if estado is not None:

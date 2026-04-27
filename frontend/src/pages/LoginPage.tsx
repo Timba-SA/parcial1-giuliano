@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -9,6 +9,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const justRegistered = (location.state as { registered?: boolean } | null)?.registered === true;
+
 
   // ── lógica original intacta ──────────────────────────────────────────────
   const submit = async (e: React.FormEvent) => {
@@ -76,6 +79,19 @@ export default function LoginPage() {
           }}
         >
           <form onSubmit={submit} className="flex flex-col gap-5">
+
+          {/* Registro exitoso */}
+            {justRegistered && (
+              <div
+                className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm mb-1"
+                style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)', color: '#16a34a' }}
+              >
+                <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                ¡Cuenta creada! Ahora podés iniciar sesión.
+              </div>
+            )}
 
             {/* error */}
             {error && (
@@ -197,7 +213,10 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-5">
-          Sistema de Pedidos · Acceso restringido
+          ¿No tenés cuenta?{' '}
+          <Link to="/registro" className="text-indigo-500 font-semibold hover:underline">
+            Registrarse
+          </Link>
         </p>
       </div>
     </div>

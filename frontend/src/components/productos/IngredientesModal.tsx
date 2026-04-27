@@ -26,7 +26,7 @@ export const IngredientesModal: React.FC<{ isOpen: boolean; onClose: () => void 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-gray-500/75 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
         
         {/* Lista de Ingredientes Existentes */}

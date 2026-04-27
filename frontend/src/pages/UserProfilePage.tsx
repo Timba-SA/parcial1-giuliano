@@ -121,12 +121,24 @@ export default function UserProfilePage() {
           <div className="pb-1 flex-1">
             <div className="flex items-center gap-2 mb-0.5">
               <h1 className="text-xl font-black text-white leading-none">{fullName}</h1>
-              <span
-                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(99,102,241,0.3)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.4)' }}
-              >
-                Usuario
-              </span>
+              {currentUser.roles.length === 0 ? (
+                <span
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(99,102,241,0.3)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.4)' }}
+                >
+                  Sin rol
+                </span>
+              ) : (
+                currentUser.roles.map(rol => (
+                  <span
+                    key={rol.codigo}
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: 'rgba(99,102,241,0.3)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.4)' }}
+                  >
+                    {rol.descripcion ?? rol.codigo}
+                  </span>
+                ))
+              )}
             </div>
             <p className="text-slate-400 text-sm">{currentUser.email}</p>
           </div>
@@ -275,12 +287,26 @@ export default function UserProfilePage() {
                 </span>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rol</span>
               </div>
-              <span
-                className="text-xs font-bold px-2.5 py-1 rounded-full"
-                style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.18)' }}
-              >
-                Usuario
-              </span>
+              <div className="flex gap-1.5 flex-wrap justify-end">
+                {currentUser.roles.length === 0 ? (
+                  <span
+                    className="text-xs font-bold px-2.5 py-1 rounded-full"
+                    style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.18)' }}
+                  >
+                    Sin rol asignado
+                  </span>
+                ) : (
+                  currentUser.roles.map(rol => (
+                    <span
+                      key={rol.codigo}
+                      className="text-xs font-bold px-2.5 py-1 rounded-full"
+                      style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.18)' }}
+                    >
+                      {rol.descripcion ?? rol.codigo}
+                    </span>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}

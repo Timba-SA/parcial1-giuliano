@@ -79,7 +79,7 @@ def update_ingrediente(
     session.refresh(ingrediente)
     return ingrediente
 
-@router_ingredientes.delete("/{id}")
+@router_ingredientes.delete("/{id}", status_code=204)
 def delete_ingrediente(
     id: int,
     session: Session = Depends(get_session)
@@ -88,7 +88,7 @@ def delete_ingrediente(
         ProductoService.delete_ingrediente(session, id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    return {"message": "Ingrediente eliminado"}
+    return None
 
 
 # ==========================
@@ -179,7 +179,7 @@ def update_categoria(
     return categoria
 
 
-@router_categorias.delete("/{id}")
+@router_categorias.delete("/{id}", status_code=204)
 def delete_categoria(
     id: Annotated[int, Path(ge=1)],
     session: Session = Depends(get_session)
@@ -188,7 +188,7 @@ def delete_categoria(
         ProductoService.delete_categoria(session, id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    return {"message": "Categoría eliminada lógicamente"}
+    return None
 
 
 # ==========================

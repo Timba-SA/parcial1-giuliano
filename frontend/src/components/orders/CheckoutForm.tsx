@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import axios from 'axios';
 import { useCreateOrder } from '../../hooks/usePedidos';
 import { useProductos, type Producto } from '../../hooks/useProductos';
 
@@ -27,8 +28,12 @@ const CheckoutForm: React.FC = () => {
           setMessage('Pedido creado correctamente');
         setItems([{ producto_id: productos?.[0]?.id || 0, cantidad: 1 }]);
       },
-      onError: (err: any) => {
-        setMessage(err?.response?.data?.detail || 'Error creando pedido');
+      onError: (err: unknown) => {
+        if (axios.isAxiosError<{ detail: string }>(err)) {
+          setMessage(err.response?.data?.detail ?? 'Error creando pedido');
+        } else {
+          setMessage('Error creando pedido');
+        }
       }
     });
   };

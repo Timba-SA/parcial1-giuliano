@@ -3,6 +3,11 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8000';
 
+export interface Rol {
+  codigo: string;
+  descripcion: string | null;
+}
+
 export interface Usuario {
   id: number;
   nombre: string;
@@ -10,6 +15,7 @@ export interface Usuario {
   email: string;
   celular?: string;
   is_active: boolean;
+  roles: Rol[];
 }
 
 export const fetchUsuarios = async (): Promise<Usuario[]> => {
@@ -30,8 +36,7 @@ export const useCurrentUser = () => {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
-      
-      // Safely decode JWT payload
+
       let email: string;
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -40,8 +45,7 @@ export const useCurrentUser = () => {
       } catch {
         throw new Error('Token inválido');
       }
-      
-      // Fetch all users and find the one matching the email
+
       const { data } = await axios.get(`${API_URL}/usuarios/`);
       const user = data.find((u: Usuario) => u.email === email);
       if (!user) throw new Error('Usuario no encontrado');
@@ -51,7 +55,7 @@ export const useCurrentUser = () => {
   });
 };
 
-export type NuevoUsuario = Omit<Usuario, 'id' | 'is_active'> & { password?: string };
+export type NuevoUsuario = Omit<Usuario, 'id' | 'is_active' | 'roles'> & { password?: string };
 
 export const useSignup = () => {
   const queryClient = useQueryClient();
@@ -82,7 +86,7 @@ export const useCrearUsuario = () => {
 export const useUpdateUsuario = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<Usuario> }) => {
+    mutationFn: async ({ id, data }: { id: number; data: Partial<Pick<Usuario, 'nombre' | 'apellido' | 'celular' | 'is_active'>> }) => {
       const response = await axios.put(`${API_URL}/usuarios/${id}`, data);
       return response.data;
     },
@@ -97,6 +101,44 @@ export const useDeleteUsuario = () => {
   return useMutation({
     mutationFn: async (id: number) => {
       const { data } = await axios.delete(`${API_URL}/usuarios/${id}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+    },
+  });
+};
+
+// ── Roles ────────────────────────────────────────────────────────────────────
+
+export const useRoles = () => {
+  return useQuery<Rol[]>({
+    queryKey: ['roles'],
+    queryFn: async () => {
+      const { data } = await axios.get(`${API_URL}/roles/`);
+      return data;
+    },
+  });
+};
+
+export const useAsignarRol = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, rolCodigo }: { userId: number; rolCodigo: string }) => {
+      const { data } = await axios.post(`${API_URL}/usuarios/${userId}/roles`, { rol_codigo: rolCodigo });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+    },
+  });
+};
+
+export const useQuitarRol = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, rolCodigo }: { userId: number; rolCodigo: string }) => {
+      const { data } = await axios.delete(`${API_URL}/usuarios/${userId}/roles/${rolCodigo}`);
       return data;
     },
     onSuccess: () => {

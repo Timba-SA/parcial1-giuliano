@@ -7,7 +7,7 @@ from app.core.database import init_db
 import logging
 
 # Import routers
-from app.usuario.router import router as usuario_router
+from app.usuario.router import router as usuario_router, roles_router
 from app.api.routes.auth import router as auth_router
 from app.producto.router import (
     router as producto_router,
@@ -71,6 +71,7 @@ app.add_middleware(
 )
 
 app.include_router(usuario_router)
+app.include_router(roles_router)
 app.include_router(auth_router)
 app.include_router(producto_router)
 app.include_router(ingrediente_router)

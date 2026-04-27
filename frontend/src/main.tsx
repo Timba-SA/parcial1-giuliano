@@ -18,6 +18,7 @@ import OrdersPage from './pages/OrdersPage'
 import OrderDetallePage from './pages/OrderDetallePage'
 import CarritoPage from './pages/CarritoPage'
 import UsuariosPage from './pages/UsuariosPage'
+import { AuthProvider } from './context/AuthContext'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +33,7 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<App />}>
@@ -59,6 +61,7 @@ createRoot(document.getElementById('root')!).render(
           </Route>
         </Routes>
       </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,
 )

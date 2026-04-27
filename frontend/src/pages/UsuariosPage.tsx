@@ -1,17 +1,83 @@
 import UserList from '../components/users/UserList';
 import UserForm from '../components/users/UserForm';
-import { useCrearUsuario, type NuevoUsuario } from '../hooks/useUsuarios';
+import {
+  useCrearUsuario,
+  useUpdateUsuario,
+  useAsignarRol,
+  useQuitarRol,
+  type NuevoUsuario,
+  type Usuario,
+} from '../hooks/useUsuarios';
 import { useState } from 'react';
 
-export default function UsuariosPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const createMutation = useCrearUsuario();
+type ModalMode = 'create' | 'edit';
 
-  const handleCreateUser = (data: NuevoUsuario) => {
-    createMutation.mutate(data, {
-      onSuccess: () => setIsModalOpen(false),
-    });
+export default function UsuariosPage() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [mode, setMode] = useState<ModalMode>('create');
+  const [selectedUser, setSelectedUser] = useState<Usuario | undefined>();
+
+  const createMutation = useCrearUsuario();
+  const updateMutation = useUpdateUsuario();
+  const asignarRol = useAsignarRol();
+  const quitarRol = useQuitarRol();
+
+  const isRoleLoading = asignarRol.isPending || quitarRol.isPending;
+
+  const openCreate = () => {
+    setSelectedUser(undefined);
+    setMode('create');
+    setModalOpen(true);
   };
+
+  const openEdit = (user: Usuario) => {
+    setSelectedUser(user);
+    setMode('edit');
+    setModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setModalOpen(false);
+    setSelectedUser(undefined);
+  };
+
+  const handleSubmit = (data: NuevoUsuario) => {
+    if (mode === 'create') {
+      createMutation.mutate(data, { onSuccess: handleClose });
+    } else if (selectedUser) {
+      updateMutation.mutate(
+        { id: selectedUser.id, data: { nombre: data.nombre, apellido: data.apellido, celular: data.celular } },
+        { onSuccess: handleClose }
+      );
+    }
+  };
+
+  const handleAddRole = (rolCodigo: string) => {
+    if (!selectedUser) return;
+    asignarRol.mutate(
+      { userId: selectedUser.id, rolCodigo },
+      {
+        onSuccess: (updatedUser) => {
+          // Actualiza el usuario seleccionado para reflejar el nuevo rol sin cerrar el modal
+          setSelectedUser(updatedUser);
+        },
+      }
+    );
+  };
+
+  const handleRemoveRole = (rolCodigo: string) => {
+    if (!selectedUser) return;
+    quitarRol.mutate(
+      { userId: selectedUser.id, rolCodigo },
+      {
+        onSuccess: (updatedUser) => {
+          setSelectedUser(updatedUser);
+        },
+      }
+    );
+  };
+
+  const isSubmitLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -21,38 +87,45 @@ export default function UsuariosPage() {
           <p className="mt-1 text-sm text-gray-500">Administra los usuarios del sistema, sus roles y estados.</p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={openCreate}
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           Nuevo Usuario
         </button>
       </div>
 
-      <UserList />
+      <UserList onEdit={openEdit} />
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-10 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-          <div className="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true" onClick={() => setIsModalOpen(false)}></div>
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-gray-500/75 transition-opacity"
+            aria-hidden="true"
+            onClick={handleClose}
+          />
 
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-            <div className="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                    <h3 className="text-lg font-medium leading-6 text-gray-900" id="modal-title">
-                      Crear Nuevo Usuario
-                    </h3>
-                    <div className="mt-2">
-                      <UserForm 
-                        onSubmit={handleCreateUser} 
-                        onCancel={() => setIsModalOpen(false)}
-                        isLoading={createMutation.isPending}
-                      />
-                    </div>
-                  </div>
-                </div>
+          {/* Panel */}
+          <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-lg bg-white shadow-xl">
+            <div className="px-6 pt-6 pb-2">
+              <h3 className="text-lg font-medium leading-6 text-gray-900" id="modal-title">
+                {mode === 'create' ? 'Crear Nuevo Usuario' : `Editar Usuario — ${selectedUser?.nombre} ${selectedUser?.apellido}`}
+              </h3>
+              <div className="mt-4">
+                <UserForm
+                  user={selectedUser}
+                  onSubmit={handleSubmit}
+                  onCancel={handleClose}
+                  isLoading={isSubmitLoading}
+                  onAddRole={mode === 'edit' ? handleAddRole : undefined}
+                  onRemoveRole={mode === 'edit' ? handleRemoveRole : undefined}
+                  isRoleLoading={isRoleLoading}
+                />
               </div>
             </div>
           </div>

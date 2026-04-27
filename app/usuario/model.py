@@ -15,7 +15,7 @@ class Usuario(SQLModel, table=True):
     apellido: str = Field(max_length=80)
     email: str = Field(max_length=254, unique=True, index=True)
     celular: Optional[str] = Field(default=None, max_length=20)
-    password_hash: str = Field(max_length=60)
+    password_hash: str = Field(max_length=128)
     is_active: bool = Field(default=True)
     
     # Relaciones

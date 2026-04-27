@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel
 from app.core.database import engine
 from app.pedido.model import EstadoPedido, FormaPago
+from app.rol.model import Rol
 
 
 def init_db_extra():
@@ -23,6 +24,12 @@ def init_db_extra():
         {"codigo": "tarjeta", "descripcion": "Tarjeta", "activo": True},
     ]
 
+    roles = [
+        {"codigo": "admin", "descripcion": "Administrador"},
+        {"codigo": "empleado", "descripcion": "Empleado"},
+        {"codigo": "cliente", "descripcion": "Cliente"},
+    ]
+
     with Session(engine) as session:
         for e in estados:
             existing = session.get(EstadoPedido, e["codigo"])
@@ -32,4 +39,8 @@ def init_db_extra():
             existing = session.get(FormaPago, f["codigo"])
             if not existing:
                 session.add(FormaPago(**f))
+        for r in roles:
+            existing = session.get(Rol, r["codigo"])
+            if not existing:
+                session.add(Rol(**r))
         session.commit()

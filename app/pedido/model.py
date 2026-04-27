@@ -18,7 +18,7 @@ class FormaPago(SQLModel, table=True):
 
 class Pedido(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    usuario_id: int = Field(foreign_key="usuario.id")
+    usuario_id: Optional[int] = Field(default=None, foreign_key="usuario.id")
     direccion_id: Optional[int] = Field(default=None, foreign_key="direccionentrega.id")
     estado_codigo: str = Field(foreign_key="estadopedido.codigo")
     forma_pago_codigo: str = Field(foreign_key="formapago.codigo")
