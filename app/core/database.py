@@ -1,15 +1,12 @@
-from sqlmodel import create_engine, SQLModel, Session
-import os
+from sqlmodel import SQLModel, create_engine, Session
+from app.core.config import settings
 
-# Normalmente usamos pydantic_settings cargandolo en .env
-# Pero acá lo dejamos hardcodeado para simplificar el ejemplo. 
-# En producción, usar variables de entorno o un sistema de configuración más robusto.
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/parcial1_db")
+engine = create_engine(settings.DATABASE_URL, echo=True)
 
-engine = create_engine(DATABASE_URL, echo=True)
 
-def init_db():
+def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
+
 
 def get_session():
     with Session(engine) as session:

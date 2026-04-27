@@ -1,0 +1,354 @@
+@startuml
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam shadowing false
+skinparam hand false
+skinparam class {
+    BackgroundColor white
+    ArrowColor #2688d4
+    BorderColor #2688d4
+}
+
+package "Dominio 1 - Identidad & Acceso" #F4F0F9 {
+  entity "Usuario" as usuario {
+    * id : BIGSERIAL <<PK>>
+    --
+    * nombre : VARCHAR(80) {NN}
+    * apellido : VARCHAR(80) {NN}
+    * email : VARCHAR(254) {UQ, NN}
+    celular : VARCHAR(20)
+    * password_hash : CHAR(60) {NN, bcrypt}
+    --
+    * created_at : TIMESTAMPTZ {NN}
+    * updated_at : TIMESTAMPTZ {NN}
+    deleted_at : TIMESTAMPTZ
+  }
+  note right of usuario
+    Seed obligatorio (app/db/seed.py):
+    ADMIN -> acceso total sin restricciones
+    STOCK -> actualiza stock y disponible
+    PEDIDOS -> avanza estados CONFIRMADO - ENTREGADO
+    CLIENTE -> opera solo sus propios datos
+    
+    PK semántica: FK legible en JWT payload
+    Payload: { roles: ["ADMIN"] }
+  end note
+
+  entity "Rol" as rol {
+    * codigo : VARCHAR(20) <<PK, seed>>
+    --
+    * nombre : VARCHAR(50) {UQ, NN}
+    descripcion : TEXT
+  }
+  note left of rol
+    PK semántica (no surrogate)
+  end note
+
+  entity "UsuarioRol" as usuariorol {
+    * usuario_id : BIGINT <<PK, FK -> Usuario.id, NN>>
+    * rol_codigo : VARCHAR(20) <<PK, FK -> Rol.codigo, NN>>
+    --
+    asignado_por_id : BIGINT <<FK -> Usuario.id, NULL>>
+    * created_at : TIMESTAMPTZ {NN}
+  }
+  note left of usuariorol
+    PK compuesta
+  end note
+
+  entity "DireccionEntrega" as direccion {
+    * id : BIGSERIAL <<PK>>
+    --
+    * usuario_id : BIGINT <<FK -> Usuario.id, NN>>
+    * alias : VARCHAR(50)
+    * linea1 : TEXT {NN}
+    linea2 : TEXT
+    * ciudad : VARCHAR(100) {NN}
+    * provincia : VARCHAR(100) {NN}
+    codigo_postal : VARCHAR(10)
+    latitud : DECIMAL(9,6)
+    longitud : DECIMAL(9,6)
+    * es_principal : BOOLEAN {NN, DEFAULT false}
+    --
+    * created_at : TIMESTAMPTZ {NN}
+    * updated_at : TIMESTAMPTZ {NN}
+    deleted_at : TIMESTAMPTZ
+  }
+
+  entity "RefreshToken" as refreshtoken {
+    * id : BIGSERIAL <<PK>>
+    --
+    * usuario_id : BIGINT <<FK -> Usuario.id, NN>>
+    * token_hash : CHAR(64) {UQ, NN, SHA-256}
+    * expires_at : TIMESTAMPTZ {NN}
+    revoked_at : TIMESTAMPTZ
+    * created_at : TIMESTAMPTZ {NN}
+  }
+  note right of refreshtoken
+    Invalidación segura en logout:
+    revoked_at = now() -> token inválido.
+    
+    Validar: expires_at > now() AND revoked_at IS NULL.
+    Job periódico: DELETE WHERE expires_at < now().
+    
+    Interceptor Axios: 401 ... POST /auth/refresh
+    -> renueva accessToken sin re-login del usuario.
+  end note
+}
+
+package "Dominio 3 - Ventas, Pagos & Trazabilidad" #FFF4E6 {
+  entity "Pedido" as pedido {
+    * id : BIGSERIAL <<PK>>
+    --
+    * usuario_id : BIGINT <<FK -> Usuario.id, NN>>
+    direccion_id : BIGINT <<FK -> DireccionEntrega.id, SET NULL>>
+    * estado_codigo : VARCHAR(20) <<FK -> EstadoPedido.codigo, NN>>
+    * forma_pago_codigo : VARCHAR(20) <<FK -> FormaPago.codigo, NN>>
+    * subtotal : DECIMAL(10,2) {NN, SNAPSHOT}
+    * descuento : DECIMAL(10,2) {NN, DEFAULT 0.00, SNAP}
+    * costo_envio : DECIMAL(10,2) {NN, DEFAULT 50.00, SNAP}
+    * total : DECIMAL(10,2) {NN, CHECK >= 0, SNAP}
+    notas : TEXT
+    --
+    * created_at : TIMESTAMPTZ {NN}
+    * updated_at : TIMESTAMPTZ {NN}
+    deleted_at : TIMESTAMPTZ
+  }
+  note left of pedido
+    Patrón Idempotent Payment:
+    idempotency_key = UUID generado por EL BACKEND.
+    Enviado a MP en header X-Idempotency-Key.
+    Evita cobros duplicados en reintentos del cliente.
+
+    Flujo webhook IPN (POST /api/v1/pagos/webhook):
+    1. Validar firma X-Signature con MP_WEBHOOK_SECRET
+    2. topic=payment ... sdk.payment().get(resource_id)
+    3. Si approved -> avanzar pedido a CONFIRMADO (UoW)
+    4. HTTP 200 "status=ok" (MP reintenta si no recibe 200)
+
+    Estados para cliente (Mapeo FSM):
+    pending -> pedido sigue PENDIENTE (efectivo sin acreditar)
+    rejected -> HTTP 402, pedido sigue PENDIENTE
+    in_process -> pedido sigue PENDIENTE, webhook resolverá
+    approved -> pedido pasa a CONFIRMADO o cancelar pedido
+  end note
+
+  entity "FormaPago" as formapago {
+    * codigo : VARCHAR(20) <<PK, seed>>
+    --
+    * descripcion : VARCHAR(80) {NN}
+    * habilitado : BOOLEAN {NN, DEFAULT true}
+  }
+  note top of formapago
+    Seed obligatorio (app/db/seed.py):
+    MERCADOPAGO -> Checkout API - CardPayment SDK
+    EFECTIVO -> retiro en local (direccion_id=NULL)
+    TRANSFERENCIA -> bancaria
+
+    habilitado=false: registro histórico preservado,
+    oculto en formulario de nuevo pedido.
+  end note
+
+  entity "EstadoPedido" as estadopedido {
+    * codigo : VARCHAR(20) <<PK, seed>>
+    --
+    * descripcion : VARCHAR(80) {NN}
+    * orden : INT {NN}
+    * es_terminal : BOOLEAN {NN}
+  }
+  note right of estadopedido
+    FSM - validar en Service, NUNCA en Router:
+
+    PENDIENTE (ord 1, terminal=false)
+    -> CONFIRMADO -> CANCELADO
+
+    CONFIRMADO (ord 2, terminal=false)
+    -> EN_PREP -> CANCELADO
+
+    EN_PREP (ord 3, terminal=false)
+    -> EN_CAMINO -> CANCELADO*
+
+    EN_CAMINO (ord 4, terminal=false)
+    -> ENTREGADO
+
+    ENTREGADO (ord 5, terminal=TRUE) -> TERMINAL
+    CANCELADO (ord 6, terminal=TRUE) -> TERMINAL
+
+    (*) solo ADMIN / PEDIDOS pueden cancelar desde EN_PREP
+
+    RN-01: es_terminal=true -> 0 transiciones salientes.
+    RN-02: primer HistorialEstadoPedido: estado_desde=NULL.
+    RN-03: HistorialEstadoPedido es append-only.
+    RN-04: Snapshot en DetallePedido -> inmutable.
+    RN-05: motivo obligatorio si estado_hacia = CANCELADO.
+  end note
+
+  entity "DetallePedido" as detallepedido {
+    * pedido_id : BIGINT <<PK, FK -> Pedido.id, CASCADE>>
+    * producto_id : BIGINT <<PK, FK -> Producto.id, RESTRICT>>
+    --
+    * cantidad : SMALLINT {NN, CHECK >= 1}
+    * nombre_snapshot : VARCHAR(200) {NN, SNAP}
+    * precio_snapshot : DECIMAL(10,2) {NN, CHECK >= 0, SNAP}
+    * subtotal_snap : DECIMAL(10,2) {NN, SNAP}
+    personalizacion : JSONB
+    --
+    * created_at : TIMESTAMPTZ {NN}
+  }
+  note bottom of detallepedido
+    Fila INMUTABLE: sin updated_at por diseño (RN-04).
+    Snapshot garantiza integridad histórica de precios y nombres.
+
+    personalizacion = INTEGER[] con IDs de Ingrediente removidos.
+    Ejemplo: [1, 7] -> removió ingrediente id=1 e id=7.
+    Solo válido para ProductoIngrediente.es_removible = true.
+
+    Schema: ItemPedidoRequest.personalizacion: list[int] | None
+  end note
+
+  entity "HistorialEstadoPedido" as historial {
+    * id : BIGSERIAL <<PK>>
+    --
+    * pedido_id : BIGINT <<FK -> Pedido.id, CASCADE>>
+    estado_desde : VARCHAR(20) <<FK -> EstadoPedido.codigo, NULL>>
+    * estado_hacia : VARCHAR(20) <<FK -> EstadoPedido.codigo, NN>>
+    usuario_id : BIGINT <<FK -> Usuario.id, NULL>>
+    * motivo : TEXT
+    --
+    * created_at : TIMESTAMPTZ {NN, append-only}
+  }
+  note left of historial
+    APPEND-ONLY (RN-03): solo INSERT.
+    Jamás UPDATE ni DELETE. Implementar como ledger de auditoría.
+
+    Reconstruir estado actual: ORDER BY created_at DESC.
+    El último registro = estado actual del pedido.
+
+    Flujo atómico en avanzar_estado() (UoW):
+    1. Validar transición en mapa FSM (Service)
+    2. UPDATE pedido.estado_codigo
+    3. INSERT HistorialEstadoPedido
+    4. commit() vía UoW(.emit)
+
+    estado_desde NULL -> creación del pedido (RN-02).
+    usuario_id NULL -> actor es el sistema (webhook).
+  end note
+
+  entity "PagoMercadoPago" as mp {
+    * id : BIGSERIAL <<PK>>
+    --
+    * pedido_id : BIGINT <<UQ, FK -> Pedido.id, NN>>
+    mp_payment_id : BIGINT {UQ, NULL}
+    mp_status : VARCHAR(30) {NN}
+    * external_reference : VARCHAR(100) {UQ, NN}
+    * idempotency_key : VARCHAR(100) {UQ, NN}
+    * total_paid : DECIMAL(10,2) {NN}
+    payment_method_id : VARCHAR(50)
+    --
+    * created_at : TIMESTAMPTZ {NN}
+    * updated_at : TIMESTAMPTZ {NN}
+  }
+}
+
+package "Dominio 2 - Catálogo de Productos" #EAF5EA {
+  entity "Producto" as producto {
+    * id : BIGSERIAL <<PK>>
+    --
+    * nombre : VARCHAR(150) {NN}
+    * descripcion : TEXT
+    * precio_base : DECIMAL(10,2) {NN, CHECK >= 0}
+    * imagenes_url : TEXT[]
+    * stock_cantidad : INTEGER {NN, CHECK >= 0, DEFAULT 0}
+    * disponible : BOOLEAN {NN, DEFAULT true}
+    --
+    * created_at : TIMESTAMPTZ {NN}
+    * updated_at : TIMESTAMPTZ {NN}
+    * deleted_at : TIMESTAMPTZ
+  }
+  note bottom of producto
+    stock_cantidad y disponible son flags INDEPENDIENTES:
+    stock=0 + disponible=true -> badge "Sin stock" (UI)
+    stock>0 + disponible=false -> deshabilitado por operador
+
+    Snapshot al crear DetallePedido:
+    precio_base -> DetallePedido.precio_snapshot (inmutable)
+    nombre -> DetallePedido.nombre_snapshot (inmutable)
+  end note
+
+  entity "Categoria" as categoria {
+    * id : BIGSERIAL <<PK>>
+    --
+    * parent_id : BIGINT <<FK -> Categoria.id, NULL>>
+    * nombre : VARCHAR(100) {UQ, NN}
+    * descripcion : TEXT
+    * imagen_url : TEXT
+    --
+    * created_at : TIMESTAMPTZ {NN}
+    * updated_at : TIMESTAMPTZ {NN}
+    * deleted_at : TIMESTAMPTZ
+  }
+
+  entity "ProductoCategoria" as productocategoria {
+    * producto_id : BIGINT <<PK, FK -> Producto.id>>
+    * categoria_id : BIGINT <<PK, FK -> Categoria.id>>
+    --
+    * es_principal : BOOLEAN {NN, DEFAULT false}
+    * created_at : TIMESTAMPTZ {NN}
+  }
+
+  entity "Ingrediente" as ingrediente {
+    * id : BIGSERIAL <<PK>>
+    --
+    * nombre : VARCHAR(100) {UQ, NN}
+    * descripcion : TEXT
+    * es_alergeno : BOOLEAN {NN, DEFAULT false}
+    --
+    * created_at : TIMESTAMPTZ {NN}
+    * updated_at : TIMESTAMPTZ {NN}
+  }
+  note right of ingrediente
+    es_alergeno = true -> badge UI en:
+    - ProductoDetail (lista de ingredientes)
+    - ProductCard (icono de advertencia)
+
+    Ingrediente es global (no duplicado por producto).
+    ProductoIngrediente.es_removible = true ->
+    aparece en checkboxes de personalización.
+    IDs seleccionados -> DetallePedido.personalizacion[].
+  end note
+
+  entity "ProductoIngrediente" as productoingrediente {
+    * producto_id : BIGINT <<PK, FK -> Producto.id>>
+    * ingrediente_id : BIGINT <<PK, FK -> Ingrediente.id>>
+    --
+    * es_removible : BOOLEAN {NN, DEFAULT false}
+  }
+}
+
+' Relaciones Dominio 1
+usuario "1" ||--o{ "0..*" usuariorol : "posee"
+rol "1" ||--o{ "0..*" usuariorol : "agrupa"
+usuario "1" ||--o{ "0..*" usuariorol : "asignado_por"
+usuario "1" ||--o{ "0..*" direccion : "tiene"
+usuario "1" ||--o{ "0..*" refreshtoken : "invalida"
+
+' Relaciones Dominio 2
+producto "1" ||--|{ "1..*" productocategoria : "clasifica"
+categoria "1" ||--o{ "0..*" productocategoria : "agrupa"
+categoria "0..1" ||--o{ "0..*" categoria : "parent"
+producto "1" ||--o{ "0..*" productoingrediente : "contiene"
+ingrediente "1" ||--o{ "0..*" productoingrediente : "referencia"
+
+' Relaciones Dominio 3
+pedido "1" ||--|{ "1..*" detallepedido : "contiene"
+producto "1" ||--o{ "0..*" detallepedido : "referenciado"
+pedido "1" ||--o{ "0..*" historial : "registra"
+estadopedido "1" ||--o{ "0..*" historial : "hacia"
+estadopedido "0..1" ||--o{ "0..*" historial : "desde"
+usuario "0..1" ||--o{ "0..*" historial : "actor"
+pedido "1" ||--o{ "0..1" mp : "pagado con"
+usuario "1" ||--o{ "0..*" pedido : "realiza"
+direccion "0..1" ||--o{ "0..*" pedido : "destino"
+estadopedido "1" ||--o{ "0..*" pedido : "en estado"
+formapago "1" ||--o{ "0..*" pedido : "pagado con"
+
+@enduml
